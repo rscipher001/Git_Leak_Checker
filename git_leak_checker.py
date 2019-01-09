@@ -97,7 +97,7 @@ if __name__ == "__main__":      # Main
         if raw_url != "":
           url = raw_url.strip()
           total = total + 1
-          print("Progress: ", total, "/", num_lines, "Success:", success, "\r", end="")
+          print("Progress:", total, "/", num_lines, ", Success:", success, "\r", end="")
           final_url = url + "/.git/HEAD"
           body = check_domain(final_url)
 

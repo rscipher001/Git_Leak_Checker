@@ -1,4 +1,2 @@
-file.txt
-domains.txt
-output.txt
-out.txt
+*domain*
+*.txt

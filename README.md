@@ -27,7 +27,7 @@ Clone it and run
 ## Journey
 - I wrote it in python and it didn't work the way it should
 - I wrote it in bash and worked but was very slow
-- I wrote it agian in Python and it seem stable for now with really good speed.
+- I wrote it again in Python and it seem stable for now with really good speed.
 
 
 ## Dependency Installation 

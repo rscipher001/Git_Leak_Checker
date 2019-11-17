@@ -9,13 +9,14 @@ import random                          # For choosing random UA
 import sys                             # For unexpected exit
 from io import BytesIO                 # For buffering curl data
 from multiprocessing import Pool       # For parallel processing
+from urllib.parse import urlparse      # For validating URL
 
 
 # Argument stuff
 ap = argparse.ArgumentParser()
 ap.add_argument('-i', '--inputfile', default='input.txt', help='input file')
 ap.add_argument('-o', '--outputfile', default='output.txt', help='output file')
-ap.add_argument('-t', '--threads', default=200, help='threads')
+ap.add_argument('-t', '--threads', default=100, help='threads')
 args = ap.parse_args()
 
 # Global variables
@@ -28,6 +29,24 @@ timeout = 5
 total = 0
 num_lines = sum(1 for line in open(inputfile))
 
+
+# URL validation
+def is_url(url):
+  try:
+    result = urlparse(url)
+    return all([result.scheme, result.netloc])
+  except ValueError:
+    return False
+
+
+# URL Remove Protocol
+def remove_scheme(url):
+  if url.startswith('http://'):
+    return url[7:]
+  elif url.startswith('https://'):
+    return url[8:]
+  else:
+    return url
 
 def read_ua():                  # Read all UA
   user_agents.add("Mozilla/5.0 (X11; Linux x86_64; rv:64.0) Gecko/20100101 Firefox/64.0")
@@ -42,13 +61,29 @@ def random_ua():                # Get Random UA
 
 def check_domain(raw_url):    # Network call
   final_url = raw_url.strip()
+
+  if not (is_url(final_url) or is_url('http://' + final_url)):
+    return False
+  else:
+    final_url = remove_scheme(final_url)
+
+  temp = final_url.split(":")
+  if (len(temp) == 2):
+    port = True
+    port_num = final_url.split(":")[1]
+  else:
+    port = False
+
   if final_url != "":
+    print('Scanning: ', final_url)
     final_url = final_url + "/.git/HEAD"
 
     try:
       buffer = BytesIO()
 
-      c = pycurl.Curl()    
+      c = pycurl.Curl()
+      if (port):
+        c.setopt(pycurl.PORT, int(port_num))
       c.setopt(c.CAINFO, certifi.where())
       c.setopt(c.WRITEDATA, buffer)
       c.setopt(pycurl.ACCEPT_ENCODING, 'identity')
@@ -62,7 +97,9 @@ def check_domain(raw_url):    # Network call
       body = buffer.getvalue().decode('iso-8859-1')
       buffer.close()
 
+      print(body)
       if "ref: refs" in body:
+        print("Found: ", final_url)
         write_domain(final_url)
 
     except pycurl.error:
